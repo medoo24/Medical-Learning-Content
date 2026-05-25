@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>Gastrointestinal Clinical Academy - Upper GIT Disorders</title>
+  <meta name="description" content="An interactive clinical dashboard exploring Upper Gastrointestinal Disorders, including reflux, motility, and peptic ulcer diseases with dynamic case files and active assessments.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="theme-teal">
+
+  <div class="app-container">
+    
+    <!-- Top Brand & Theme Controls -->
+    <header class="header-bar">
+      <div class="brand-section">
+        <span class="brand-logo">🩺</span>
+        <h1 id="academy-title">Gastrointestinal Clinical Academy</h1>
+      </div>
+      
+      <div class="theme-controls" id="theme-panel" aria-label="Medical Color Schemes">
+        <button class="theme-btn active" data-theme="teal" id="theme-btn-teal">Clinical Teal</button>
+        <button class="theme-btn" data-theme="blue" id="theme-btn-blue">Surgery Blue</button>
+        <button class="theme-btn" data-theme="amethyst" id="theme-btn-amethyst">Deep Amethyst</button>
+        <button class="theme-btn" data-theme="dark" id="theme-btn-dark">Anatomy Dark</button>
+        <button class="theme-btn" data-theme="sunset" id="theme-btn-sunset">Sunset Glow</button>
+        <button class="theme-btn" data-theme="forest" id="theme-btn-forest">Forest Emerald</button>
+        <button class="theme-btn" data-theme="crimson" id="theme-btn-crimson">Clinical Crimson</button>
+      </div>
+    </header>
+
+    <!-- Accordion Section: Upper GIT Disorders List -->
+    <section class="accordion-wrapper expanded" id="git-accordion">
+      <!-- Accordion Toggle Header -->
+      <div class="accordion-header" id="accordion-header" role="button" aria-expanded="true">
+        <div class="accordion-title-block">
+          <span class="accordion-title-icon">📂</span>
+          <span class="accordion-title-text">Upper GIT Disorders</span>
+          <span class="accordion-badge" id="lessons-count-badge">6 Lessons</span>
+        </div>
+        <span class="chevron-icon" id="accordion-chevron">▼</span>
+      </div>
+
+      <!-- Accordion Inner Expandable Content -->
+      <div class="accordion-content" id="accordion-content">
+        <!-- Search and Filter Bar -->
+        <div class="filter-panel">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Search clinical topics, symptoms, or organs (e.g. esophagus, reflux, acid)..."
+            aria-label="Search clinical topics"
+          >
+          <select id="filter-select" class="filter-select" aria-label="Filter by clinical difficulty">
+            <option value="all">Filter: All Difficulties</option>
+            <option value="easy">Easy Classification</option>
+            <option value="medium">Medium Classification</option>
+            <option value="hard">Hard Classification</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Grid of Lessons -->
+        <div class="lessons-grid" id="lessons-grid" role="list">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Viewport: Large Clinical ID Card Display -->
+    <main class="card-viewport" id="card-viewport" aria-live="polite">
+      <!-- Loaded dynamically via JS. Default state renders the first lesson ID Card -->
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>Select a Clinical Lesson</h3>
+        <p>Choose an Upper GIT disorder from the clinical files index above to load the detailed medical file.</p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript Modules in Order -->
+  <script src="js/lessons-data.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

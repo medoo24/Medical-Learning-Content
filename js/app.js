@@ -1,0 +1,285 @@
+// Gastrointestinal Clinical Academy - Core App Logic
+document.addEventListener("DOMContentLoaded", () => {
+  let activeLesson = null;
+  let activeTheme = "teal";
+  const quizEngine = new window.ClinicalQuiz("quiz-viewport");
+
+  // DOM Elements
+  const accordionWrapper = document.getElementById("git-accordion");
+  const accordionHeader = document.getElementById("accordion-header");
+  const lessonsGrid = document.getElementById("lessons-grid");
+  const searchInput = document.getElementById("search-input");
+  const filterSelect = document.getElementById("filter-select");
+  const cardViewport = document.getElementById("card-viewport");
+  
+  // Theme Buttons
+  const themeBtns = document.querySelectorAll(".theme-btn");
+
+  // --- Theme Manager ---
+  function changeTheme(themeName) {
+    activeTheme = themeName;
+    document.body.className = `theme-${themeName}`;
+    
+    themeBtns.forEach(btn => {
+      if (btn.getAttribute("data-theme") === themeName) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+    
+    // Store in localStorage for persistence
+    localStorage.setItem("git-academy-theme", themeName);
+  }
+
+  // Init Theme
+  const savedTheme = localStorage.getItem("git-academy-theme") || "teal";
+  changeTheme(savedTheme);
+
+  themeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      changeTheme(btn.getAttribute("data-theme"));
+    });
+  });
+
+  // --- Accordion Controls ---
+  accordionHeader.addEventListener("click", () => {
+    accordionWrapper.classList.toggle("expanded");
+  });
+
+  // --- Render Lessons List ---
+  function renderLessonsList(lessonsToRender) {
+    lessonsGrid.innerHTML = "";
+    
+    if (lessonsToRender.length === 0) {
+      lessonsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);">
+          No matching disorders or lessons found.
+        </div>
+      `;
+      return;
+    }
+
+    lessonsToRender.forEach(lesson => {
+      const isSelected = activeLesson && activeLesson.id === lesson.id;
+      const difficultyClass = `badge-${lesson.difficulty}`;
+      
+      const item = document.createElement("div");
+      item.className = `lesson-item ${isSelected ? 'active' : ''}`;
+      item.innerHTML = `
+        <div class="lesson-item-header">
+          <span class="lesson-item-title">${lesson.title}</span>
+          <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
+        </div>
+        <div class="lesson-item-meta">
+          <span>${lesson.organ}</span>
+          <span>⏱️ ${lesson.readTime}</span>
+        </div>
+      `;
+      
+      item.addEventListener("click", () => {
+        selectLesson(lesson);
+        // Highlight active list item
+        document.querySelectorAll(".lesson-item").forEach(el => el.classList.remove("active"));
+        item.classList.add("active");
+      });
+      
+      lessonsGrid.appendChild(item);
+    });
+  }
+
+  // --- Filter and Search Logic ---
+  function performFilter() {
+    const query = searchInput.value.toLowerCase().trim();
+    const difficultyFilter = filterSelect.value;
+    
+    const filtered = lessonsData.filter(lesson => {
+      const matchesSearch = 
+        lesson.title.toLowerCase().includes(query) || 
+        lesson.definition.toLowerCase().includes(query) ||
+        lesson.organ.toLowerCase().includes(query);
+        
+      const matchesDifficulty = 
+        difficultyFilter === "all" || 
+        lesson.difficulty === difficultyFilter;
+        
+      return matchesSearch && matchesDifficulty;
+    });
+    
+    renderLessonsList(filtered);
+  }
+
+  searchInput.addEventListener("input", performFilter);
+  filterSelect.addEventListener("change", performFilter);
+
+  // --- Select and Render Lesson Details ---
+  function selectLesson(lesson) {
+    activeLesson = lesson;
+    renderLessonCard(lesson);
+    
+    // Smooth scroll down to clinical card display
+    cardViewport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderLessonCard(lesson) {
+    const difficultyClass = `badge-${lesson.difficulty}`;
+    const fileId = `GIT-REC-${lesson.id.toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+
+    cardViewport.innerHTML = `
+      <div class="clinical-id-card">
+        <div class="card-header">
+          <div class="card-header-text">
+            <span class="card-pretitle">Clinical Case & Lesson File</span>
+            <div class="card-title">${lesson.title}</div>
+          </div>
+          <div class="card-header-badge-group">
+            <span class="card-badge ${difficultyClass}">${lesson.difficulty}</span>
+            <span class="card-file-id">${fileId}</span>
+          </div>
+        </div>
+
+        <div class="card-layout">
+          <!-- Left Sidebar -->
+          <div class="card-sidebar">
+            <div class="sidebar-panel">
+              <span class="sidebar-label">Target Organ System</span>
+              <span class="sidebar-value">🫁 ${lesson.organ}</span>
+            </div>
+            
+            <div class="sidebar-panel">
+              <span class="sidebar-label">Estimated Study Time</span>
+              <span class="sidebar-value">⏱️ ${lesson.readTime}</span>
+            </div>
+
+            <div class="sidebar-panel">
+              <span class="sidebar-label">High-Yield Facts</span>
+              <ul class="quick-facts-list">
+                ${lesson.keyPoints.map(pt => `<li>${pt}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Right Content Column -->
+          <div class="card-main">
+            <!-- Tabs Navigation -->
+            <div class="tab-nav">
+              <button class="tab-btn active" data-tab="overview">Definition & Overview</button>
+              <button class="tab-btn" data-tab="presentation">Clinical Presentation</button>
+              <button class="tab-btn" data-tab="diagnostics">Diagnostic Plan</button>
+              <button class="tab-btn" data-tab="management">Management & Rx</button>
+              ${lesson.caseStudy ? `<button class="tab-btn" data-tab="case">Clinical Case</button>` : ''}
+              <button class="tab-btn" data-tab="quiz">Active Assessment</button>
+            </div>
+
+            <!-- Tab Viewports -->
+            <div class="tab-viewport">
+              <!-- Overview Pane -->
+              <div class="tab-pane active" id="pane-overview">
+                <h2>Clinical Definition</h2>
+                <p style="font-size: 1.1rem; line-height: 1.6; padding: 1rem; background-color: var(--primary-light); border-radius: var(--radius-sm); border-left: 4px solid var(--primary); margin-bottom: 1.5rem;">
+                  ${lesson.definition}
+                </p>
+                
+                <h2>Epidemiology & Demographics</h2>
+                ${lesson.epidemiology}
+
+                <h2>Pathophysiology details</h2>
+                ${lesson.pathophysiology}
+              </div>
+
+              <!-- Presentation Pane -->
+              <div class="tab-pane" id="pane-presentation">
+                <h2>Clinical Manifestations</h2>
+                ${lesson.presentation}
+              </div>
+
+              <!-- Diagnostics Pane -->
+              <div class="tab-pane" id="pane-diagnostics">
+                <h2>Investigations & Diagnostics</h2>
+                ${lesson.diagnostics}
+              </div>
+
+              <!-- Management Pane -->
+              <div class="tab-pane" id="pane-management">
+                <h2>Treatment & Management Protocols</h2>
+                ${lesson.management}
+              </div>
+
+              <!-- Case Study Pane -->
+              ${lesson.caseStudy ? `
+                <div class="tab-pane" id="pane-case">
+                  <div class="case-study-grid">
+                    <span class="case-profile">🩺 Clinical Scenario Profile</span>
+                    <div class="case-block">
+                      <strong>Patient Presentation:</strong> ${lesson.caseStudy.history}
+                    </div>
+                    <div class="case-block" style="border-left-color: var(--primary);">
+                      <strong>Initial Assessment:</strong> ${lesson.caseStudy.investigations}
+                    </div>
+                    
+                    <h2 style="margin-top: 1rem;">Interactive Clinical Case Review</h2>
+                    <div class="case-qa-section">
+                      ${lesson.caseStudy.questionsAnswers.map((qa, index) => `
+                        <div class="case-qa-item">
+                          <div class="case-question" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                            <span>Q${index+1}: ${qa.q}</span>
+                            <span>▼</span>
+                          </div>
+                          <div class="case-answer" style="display: none;">
+                            ${qa.a}
+                          </div>
+                        </div>
+                      `).join("")}
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Quiz Pane -->
+              <div class="tab-pane" id="pane-quiz" id="quiz-viewport">
+                <!-- Renders dynamically through quizEngine -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Hook tab button click events
+    const tabBtns = cardViewport.querySelectorAll(".tab-btn");
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetTab = btn.getAttribute("data-tab");
+        
+        // Remove active class from all buttons and panes
+        tabBtns.forEach(b => b.classList.remove("active"));
+        cardViewport.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
+        
+        // Add active to current button
+        btn.classList.add("active");
+        
+        if (targetTab === "quiz") {
+          // Select pane-quiz container and clear it for clean render
+          const quizPane = cardViewport.querySelector("#pane-quiz");
+          quizPane.id = "quiz-viewport"; // ensure correct ID is mapped for class
+          quizPane.classList.add("active");
+          quizEngine.container = quizPane;
+          quizEngine.loadQuiz(lesson);
+        } else {
+          const targetPane = cardViewport.querySelector(`#pane-${targetTab}`);
+          if (targetPane) {
+            targetPane.classList.add("active");
+          }
+        }
+      });
+    });
+  }
+
+  // --- Initial Setup ---
+  renderLessonsList(lessonsData);
+  
+  // Select first lesson by default
+  if (lessonsData.length > 0) {
+    selectLesson(lessonsData[0]);
+  }
+});
