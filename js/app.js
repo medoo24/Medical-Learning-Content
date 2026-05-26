@@ -1,8 +1,9 @@
 // Gastrointestinal Clinical Academy - Core App Logic
 document.addEventListener("DOMContentLoaded", () => {
   let activeLesson = null;
-  let activeTheme = "teal";
-  // quizEngine is created lazily when the quiz tab is activated (the pane is re-rendered each lesson)
+  let activeTheme  = "teal";
+  // One quiz engine per lesson — keyed by lesson.id so state persists across tab switches
+  const lessonQuizEngines = {};
 
   // DOM Elements
   const accordions = document.querySelectorAll(".category-accordion");
@@ -280,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
               <!-- Quiz Pane -->
               <div class="tab-pane" id="pane-quiz">
-                <!-- Renders dynamically through quizEngine -->
+                <!-- Quiz renders here via ClinicalQuiz engine -->
               </div>
               `}
             </div>
@@ -316,10 +317,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetTab === 'quiz') {
           const quizPane = cardViewport.querySelector('#pane-quiz');
           if (quizPane) {
-            // Create a fresh quiz engine pointed at this pane every time
-            quizPane.id = 'quiz-viewport-active';
-            const qEngine = new window.ClinicalQuiz('quiz-viewport-active');
-            qEngine.loadQuiz(lesson);
+            if (!lessonQuizEngines[lesson.id]) {
+              // First visit to this lesson's quiz — create and load
+              lessonQuizEngines[lesson.id] = new window.ClinicalQuiz(quizPane);
+              lessonQuizEngines[lesson.id].loadQuiz(lesson);
+            } else {
+              // Returning to quiz tab — resume with preserved state
+              lessonQuizEngines[lesson.id].resume(quizPane);
+            }
           }
         }
       });
