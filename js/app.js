@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="tab-btn" data-tab="presentation">Clinical Presentation</button>
                 <button class="tab-btn" data-tab="diagnostics">Diagnostic Plan</button>
                 <button class="tab-btn" data-tab="management">Management & Rx</button>
-                ${lesson.caseStudy ? \`<button class="tab-btn" data-tab="case">Clinical Case</button>\` : ''}
+                ${lesson.caseStudy ? `<button class="tab-btn" data-tab="case">Clinical Case</button>` : ''}
                 <button class="tab-btn" data-tab="quiz">Active Assessment</button>
               `}
             </div>
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
 
               <!-- Case Study Pane -->
-              ${lesson.caseStudy ? \`
+              ${lesson.caseStudy ? `
                 <div class="tab-pane" id="pane-case">
                   <div class="case-study-grid">
                     <span class="case-profile">🩺 Clinical Scenario Profile</span>
@@ -262,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     <h2 style="margin-top: 1rem;">Interactive Clinical Case Review</h2>
                     <div class="case-qa-section">
-                      ${lesson.caseStudy.questionsAnswers.map((qa, index) => \`
+                      ${lesson.caseStudy.questionsAnswers.map((qa, index) => `
                         <div class="case-qa-item">
                           <div class="case-question" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
                             <span>Q${index+1}: ${qa.q}</span>
@@ -272,11 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${qa.a}
                           </div>
                         </div>
-                      \`).join("")}
+                      `).join("")}
                     </div>
                   </div>
                 </div>
-              \` : ''}
+              ` : ''}
 
               <!-- Quiz Pane -->
               <div class="tab-pane" id="pane-quiz" id="quiz-viewport">
