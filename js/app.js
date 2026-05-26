@@ -321,23 +321,45 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Implement "Tease & Lock" Premium Mechanic
-    // 1. Clear any existing lock timers if user clicks fast
+    // --- DevTools Detection & Conditional Lock ---
+    // Remove previous unconditional lock timer if any
     if (window.currentLockTimer) {
       clearTimeout(window.currentLockTimer);
     }
-    
-    // 2. Set the trap for 800ms
-    window.currentLockTimer = setTimeout(() => {
-      // Blur the actual tab viewport, NOT the whole card main
+    // Function to apply lock overlay
+    const applyLock = () => {
       const mainContent = cardViewport.querySelector('.tab-viewport');
       const overlay = cardViewport.querySelector('#lock-overlay-container');
-      
       if (mainContent && overlay) {
         mainContent.classList.add('content-locked');
         overlay.style.display = 'block';
       }
-    }, 800);
+    };
+    // DevTools detection using window size differences
+    const devToolsCheckInterval = setInterval(() => {
+      const threshold = 160; // pixels difference indicative of devtools open
+      const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
+      const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
+      if (widthDiff > threshold || heightDiff > threshold) {
+        applyLock();
+      }
+    }, 500);
+    // Ensure lock is removed when switching tabs
+    const clearDevToolsLock = () => {
+      const mainContent = cardViewport.querySelector('.tab-viewport');
+      const overlay = cardViewport.querySelector('#lock-overlay-container');
+      if (mainContent && overlay) {
+        mainContent.classList.remove('content-locked');
+        overlay.style.display = 'none';
+      }
+    };
+    // Hook into tab change to clear any existing lock
+    const tabBtnsHook = cardViewport.querySelectorAll('.tab-btn');
+    tabBtnsHook.forEach(btn => {
+      btn.addEventListener('click', () => {
+        clearDevToolsLock();
+      });
+    });
   }
 
   // --- Initial Setup ---
