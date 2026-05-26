@@ -21,7 +21,7 @@ class ClinicalQuiz {
   render() {
     if (!this.container) return;
 
-    if (!this.currentLesson || !this.currentLesson.mcqs || this.currentLesson.mcqs.length === 0) {
+    if (!this.currentLesson || !this.currentLesson.quizQuestions || this.currentLesson.quizQuestions.length === 0) {
       this.container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">📝</div>
@@ -32,7 +32,7 @@ class ClinicalQuiz {
       return;
     }
 
-    const mcqs = this.currentLesson.mcqs;
+    const mcqs = this.currentLesson.quizQuestions;
     
     // Check if we finished the quiz
     if (this.currentQuestionIdx >= mcqs.length) {
@@ -98,7 +98,7 @@ class ClinicalQuiz {
     this.answered = true;
 
     const selectedIdx = parseInt(selectedElement.getAttribute("data-index"));
-    const correctIdx = this.currentLesson.mcqs[this.currentQuestionIdx].answerIndex;
+    const correctIdx = this.currentLesson.quizQuestions[this.currentQuestionIdx].answerIndex;
     
     const optionItems = this.container.querySelectorAll(".option-item");
     
@@ -124,14 +124,14 @@ class ClinicalQuiz {
     // Update score in the header
     const scoreHeader = this.container.querySelector(".quiz-score-header span:last-child");
     if (scoreHeader) {
-      scoreHeader.textContent = `Score: ${this.score}/${this.currentLesson.mcqs.length}`;
+      scoreHeader.textContent = `Score: ${this.score}/${this.currentLesson.quizQuestions.length}`;
     }
 
     // Show the next button
     const nextBtn = this.container.querySelector("#quiz-next-btn");
     if (nextBtn) {
       nextBtn.style.display = "block";
-      if (this.currentQuestionIdx === this.currentLesson.mcqs.length - 1) {
+      if (this.currentQuestionIdx === this.currentLesson.quizQuestions.length - 1) {
         nextBtn.textContent = "Finish Quiz";
       }
     }
@@ -145,7 +145,7 @@ class ClinicalQuiz {
 
   // Render final scoring panel
   renderResults() {
-    const totalQ = this.currentLesson.mcqs.length;
+    const totalQ = this.currentLesson.quizQuestions.length;
     const percentage = Math.round((this.score / totalQ) * 100);
     
     let performanceText = "Keep studying to master these clinical details.";

@@ -2,7 +2,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   let activeLesson = null;
   let activeTheme = "teal";
-  const quizEngine = new window.ClinicalQuiz("quiz-viewport");
+  // quizEngine is created lazily when the quiz tab is activated (the pane is re-rendered each lesson)
 
   // DOM Elements
   const accordions = document.querySelectorAll(".category-accordion");
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ` : ''}
 
               <!-- Quiz Pane -->
-              <div class="tab-pane" id="pane-quiz" id="quiz-viewport">
+              <div class="tab-pane" id="pane-quiz">
                 <!-- Renders dynamically through quizEngine -->
               </div>
               `}
@@ -313,9 +313,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activePane) activePane.classList.add("active");
         
         // Trigger quiz engine if quiz tab selected
-        if(targetTab === 'quiz') {
-          if (window.quizEngine) {
-            window.quizEngine.init(lesson.quizQuestions, cardViewport.querySelector("#pane-quiz"));
+        if (targetTab === 'quiz') {
+          const quizPane = cardViewport.querySelector('#pane-quiz');
+          if (quizPane) {
+            // Create a fresh quiz engine pointed at this pane every time
+            quizPane.id = 'quiz-viewport-active';
+            const qEngine = new window.ClinicalQuiz('quiz-viewport-active');
+            qEngine.loadQuiz(lesson);
           }
         }
       });
