@@ -185,16 +185,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   searchInput.addEventListener("input", performFilter);
-  filterSelect.addEventListener("change", performFilter);
+  
+  filterSelect.addEventListener("change", () => {
+    localStorage.setItem("git-academy-filter-difficulty", filterSelect.value);
+    performFilter();
+  });
   
   const sortSelect = document.getElementById("sort-select");
   if (sortSelect) {
-    sortSelect.addEventListener("change", performFilter);
+    sortSelect.addEventListener("change", () => {
+      localStorage.setItem("git-academy-sort-classification", sortSelect.value);
+      performFilter();
+    });
   }
   
   const statusFilterSelect = document.getElementById("status-filter-select");
   if (statusFilterSelect) {
-    statusFilterSelect.addEventListener("change", performFilter);
+    statusFilterSelect.addEventListener("change", () => {
+      localStorage.setItem("git-academy-filter-status", statusFilterSelect.value);
+      performFilter();
+    });
   }
 
   // --- Select and Render Lesson Details ---
@@ -480,7 +490,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Initial Setup ---
-  renderLessonsList(allLessonsData);
+  // Restore saved filters/sorting
+  const savedDifficulty = localStorage.getItem("git-academy-filter-difficulty");
+  if (savedDifficulty && filterSelect) {
+    filterSelect.value = savedDifficulty;
+  }
+  const savedSort = localStorage.getItem("git-academy-sort-classification");
+  if (savedSort && sortSelect) {
+    sortSelect.value = savedSort;
+  }
+  const savedStatus = localStorage.getItem("git-academy-filter-status");
+  if (savedStatus && statusFilterSelect) {
+    statusFilterSelect.value = savedStatus;
+  }
+
+  // Initial render with saved filters applied
+  performFilter();
   
   // Select previously active lesson or default to first
   const savedLessonId = localStorage.getItem("git-academy-active-lesson");
