@@ -10,12 +10,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const intestinalLessonsGrid = document.getElementById("intestinal-lessons-grid");
   const gitCountBadge = document.getElementById("git-count-badge");
   const intestinalCountBadge = document.getElementById("intestinal-count-badge");
+  const collectionsGrid = document.getElementById("collections-grid");
+  const collectionsCountBadge = document.getElementById("collections-count-badge");
   const searchInput = document.getElementById("search-input");
   const filterSelect = document.getElementById("filter-select");
   const cardViewport = document.getElementById("card-viewport");
   
   // Combine all lessons data
-  const allLessonsData = [...(typeof lessonsData !== 'undefined' ? lessonsData : []), ...(typeof intestinalLessonsData !== 'undefined' ? intestinalLessonsData : [])];
+  const allLessonsData = [
+    ...(typeof lessonsData !== 'undefined' ? lessonsData : []), 
+    ...(typeof intestinalLessonsData !== 'undefined' ? intestinalLessonsData : []),
+    ...(typeof collectionsData !== 'undefined' ? collectionsData : [])
+  ];
   
   // Theme Buttons
   const themeBtns = document.querySelectorAll(".theme-btn");
@@ -59,15 +65,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderLessonsList(lessonsToRender) {
     gitLessonsGrid.innerHTML = "";
     intestinalLessonsGrid.innerHTML = "";
+    collectionsGrid.innerHTML = "";
     
     // Determine which category a lesson belongs to (we can check a property or hardcode by ID prefixes if needed, 
     // but the cleanest way is to check if it exists in the original lessonsData array)
-    const upperGitLessons = lessonsToRender.filter(l => lessonsData.find(u => u.id === l.id));
-    const intestinalLessons = lessonsToRender.filter(l => intestinalLessonsData.find(i => i.id === l.id));
+    const upperGitLessons = lessonsToRender.filter(l => !l.isCollection && lessonsData.find(u => u.id === l.id));
+    const intestinalLessons = lessonsToRender.filter(l => !l.isCollection && intestinalLessonsData.find(i => i.id === l.id));
+    const collectionsLessons = lessonsToRender.filter(l => l.isCollection);
 
     // Update Badges
     gitCountBadge.textContent = `${upperGitLessons.length} Lessons`;
     intestinalCountBadge.textContent = `${intestinalLessons.length} Lessons`;
+    collectionsCountBadge.textContent = `${collectionsLessons.length} Collections`;
 
     function populateGrid(gridElement, lessonsArray) {
       if (lessonsArray.length === 0) {
@@ -109,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     populateGrid(gitLessonsGrid, upperGitLessons);
     populateGrid(intestinalLessonsGrid, intestinalLessons);
+    populateGrid(collectionsGrid, collectionsLessons);
   }
 
   // --- Filter and Search Logic ---
@@ -138,6 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Select and Render Lesson Details ---
   function selectLesson(lesson) {
     activeLesson = lesson;
+    localStorage.setItem("git-academy-active-lesson", lesson.id);
     renderLessonCard(lesson);
     
     // Smooth scroll down to clinical card display
@@ -186,16 +197,25 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="card-main">
             <!-- Tabs Navigation -->
             <div class="tab-nav">
-              <button class="tab-btn active" data-tab="overview">Definition & Overview</button>
-              <button class="tab-btn" data-tab="presentation">Clinical Presentation</button>
-              <button class="tab-btn" data-tab="diagnostics">Diagnostic Plan</button>
-              <button class="tab-btn" data-tab="management">Management & Rx</button>
-              ${lesson.caseStudy ? `<button class="tab-btn" data-tab="case">Clinical Case</button>` : ''}
-              <button class="tab-btn" data-tab="quiz">Active Assessment</button>
+              ${lesson.customTabs ? lesson.customTabs.map((tab, i) => `
+                <button class="tab-btn ${i === 0 ? 'active' : ''}" data-tab="${tab.id}">${tab.title}</button>
+              `).join("") : `
+                <button class="tab-btn active" data-tab="overview">Definition & Overview</button>
+                <button class="tab-btn" data-tab="presentation">Clinical Presentation</button>
+                <button class="tab-btn" data-tab="diagnostics">Diagnostic Plan</button>
+                <button class="tab-btn" data-tab="management">Management & Rx</button>
+                ${lesson.caseStudy ? \`<button class="tab-btn" data-tab="case">Clinical Case</button>\` : ''}
+                <button class="tab-btn" data-tab="quiz">Active Assessment</button>
+              `}
             </div>
 
             <!-- Tab Viewports -->
             <div class="tab-viewport">
+              ${lesson.customTabs ? lesson.customTabs.map((tab, i) => `
+                <div class="tab-pane ${i === 0 ? 'active' : ''}" id="pane-${tab.id}">
+                  ${lesson['pane_' + tab.id]}
+                </div>
+              `).join("") : `
               <!-- Overview Pane -->
               <div class="tab-pane active" id="pane-overview">
                 <h2>Clinical Definition</h2>
@@ -229,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
 
               <!-- Case Study Pane -->
-              ${lesson.caseStudy ? `
+              ${lesson.caseStudy ? \`
                 <div class="tab-pane" id="pane-case">
                   <div class="case-study-grid">
                     <span class="case-profile">🩺 Clinical Scenario Profile</span>
@@ -242,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     <h2 style="margin-top: 1rem;">Interactive Clinical Case Review</h2>
                     <div class="case-qa-section">
-                      ${lesson.caseStudy.questionsAnswers.map((qa, index) => `
+                      ${lesson.caseStudy.questionsAnswers.map((qa, index) => \`
                         <div class="case-qa-item">
                           <div class="case-question" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
                             <span>Q${index+1}: ${qa.q}</span>
@@ -252,16 +272,17 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${qa.a}
                           </div>
                         </div>
-                      `).join("")}
+                      \`).join("")}
                     </div>
                   </div>
                 </div>
-              ` : ''}
+              \` : ''}
 
               <!-- Quiz Pane -->
               <div class="tab-pane" id="pane-quiz" id="quiz-viewport">
                 <!-- Renders dynamically through quizEngine -->
               </div>
+              `}
             </div>
           </div>
         </div>
@@ -301,8 +322,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Initial Setup ---
   renderLessonsList(allLessonsData);
   
-  // Select first lesson by default
-  if (allLessonsData.length > 0) {
+  // Select previously active lesson or default to first
+  const savedLessonId = localStorage.getItem("git-academy-active-lesson");
+  if (savedLessonId) {
+    const foundLesson = allLessonsData.find(l => l.id === savedLessonId);
+    if (foundLesson) {
+      selectLesson(foundLesson);
+    } else if (allLessonsData.length > 0) {
+      selectLesson(allLessonsData[0]);
+    }
+  } else if (allLessonsData.length > 0) {
     selectLesson(allLessonsData[0]);
   }
 });
