@@ -68,11 +68,33 @@ document.addEventListener("DOMContentLoaded", () => {
     intestinalLessonsGrid.innerHTML = "";
     collectionsGrid.innerHTML = "";
     
+    const sortSelect = document.getElementById("sort-select");
+    const sortVal = sortSelect ? sortSelect.value : "default";
+
+    let sortedList = [...lessonsToRender];
+    if (sortVal === "class-asc") {
+      sortedList.sort((a, b) => {
+        const classA = localStorage.getItem(`git-academy-class-${a.id}`) || 'Z';
+        const classB = localStorage.getItem(`git-academy-class-${b.id}`) || 'Z';
+        if (classA === 'Z' && classB !== 'Z') return 1;
+        if (classB === 'Z' && classA !== 'Z') return -1;
+        return classA.localeCompare(classB);
+      });
+    } else if (sortVal === "class-desc") {
+      sortedList.sort((a, b) => {
+        const classA = localStorage.getItem(`git-academy-class-${a.id}`) || '';
+        const classB = localStorage.getItem(`git-academy-class-${b.id}`) || '';
+        if (classA === '' && classB !== '') return 1;
+        if (classB === '' && classA !== '') return -1;
+        return classB.localeCompare(classA);
+      });
+    }
+
     // Determine which category a lesson belongs to (we can check a property or hardcode by ID prefixes if needed, 
     // but the cleanest way is to check if it exists in the original lessonsData array)
-    const upperGitLessons = lessonsToRender.filter(l => !l.isCollection && lessonsData.find(u => u.id === l.id));
-    const intestinalLessons = lessonsToRender.filter(l => !l.isCollection && intestinalLessonsData.find(i => i.id === l.id));
-    const collectionsLessons = lessonsToRender.filter(l => l.isCollection);
+    const upperGitLessons = sortedList.filter(l => !l.isCollection && lessonsData.find(u => u.id === l.id));
+    const intestinalLessons = sortedList.filter(l => !l.isCollection && intestinalLessonsData.find(i => i.id === l.id));
+    const collectionsLessons = sortedList.filter(l => l.isCollection);
 
     // Update Badges
     gitCountBadge.textContent = `${upperGitLessons.length} Lessons`;
@@ -92,13 +114,20 @@ document.addEventListener("DOMContentLoaded", () => {
       lessonsArray.forEach(lesson => {
         const isSelected = activeLesson && activeLesson.id === lesson.id;
         const difficultyClass = `badge-${lesson.difficulty}`;
+        const customClass = localStorage.getItem(`git-academy-class-${lesson.id}`) || '';
+        const customBadgeHtml = customClass 
+          ? `<span class="custom-class-badge" title="Custom Classification ${customClass}">${customClass}</span>` 
+          : '';
         
         const item = document.createElement("div");
         item.className = `lesson-item ${isSelected ? 'active' : ''}`;
         item.innerHTML = `
           <div class="lesson-item-header">
             <span class="lesson-item-title">${lesson.title}</span>
-            <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+              ${customBadgeHtml}
+              <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
+            </div>
           </div>
           <div class="lesson-item-meta">
             <span>${lesson.organ}</span>
@@ -145,6 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   searchInput.addEventListener("input", performFilter);
   filterSelect.addEventListener("change", performFilter);
+  
+  const sortSelect = document.getElementById("sort-select");
+  if (sortSelect) {
+    sortSelect.addEventListener("change", performFilter);
+  }
 
   // --- Select and Render Lesson Details ---
   function selectLesson(lesson) {
@@ -159,6 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderLessonCard(lesson) {
     const difficultyClass = `badge-${lesson.difficulty}`;
     const fileId = `GIT-REC-${lesson.id.toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const customClass = localStorage.getItem(`git-academy-class-${lesson.id}`) || '';
 
     cardViewport.innerHTML = `
       <div class="clinical-id-card">
@@ -184,6 +219,17 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="sidebar-panel">
               <span class="sidebar-label">Estimated Study Time</span>
               <span class="sidebar-value">⏱️ ${lesson.readTime}</span>
+            </div>
+
+            <div class="sidebar-panel">
+              <span class="sidebar-label">Priority Classification</span>
+              <div class="classification-selector">
+                <button class="class-btn ${customClass === 'A' ? 'active' : ''}" data-class="A">A</button>
+                <button class="class-btn ${customClass === 'B' ? 'active' : ''}" data-class="B">B</button>
+                <button class="class-btn ${customClass === 'C' ? 'active' : ''}" data-class="C">C</button>
+                <button class="class-btn ${customClass === 'D' ? 'active' : ''}" data-class="D">D</button>
+                <button class="class-btn ${!customClass ? 'active' : ''}" data-class="" title="Clear Classification">×</button>
+              </div>
             </div>
 
             <div class="sidebar-panel">
@@ -327,6 +373,26 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         }
+      });
+    });
+
+    // Hook up priority buttons click
+    const classBtns = cardViewport.querySelectorAll(".class-btn");
+    classBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const selectedClass = btn.getAttribute("data-class");
+        if (selectedClass) {
+          localStorage.setItem(`git-academy-class-${lesson.id}`, selectedClass);
+        } else {
+          localStorage.removeItem(`git-academy-class-${lesson.id}`);
+        }
+        
+        // Update active class on buttons
+        classBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Refresh lessons list to update badge and sort order
+        performFilter();
       });
     });
 
