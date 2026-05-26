@@ -37,7 +37,7 @@
         // (meaning DevTools is open and they had to click "Resume" or it paused).
         if (end - start > 100) {
             // Punish them by wiping the DOM and stopping the app
-            document.body.innerHTML = \`
+            document.body.innerHTML = `
                 <div style="display:flex; justify-content:center; align-items:center; height:100vh; background-color:#0f172a; color:#ef4444; font-family:system-ui, sans-serif; text-align:center; padding: 2rem;">
                     <div>
                         <h1 style="font-size:3rem; margin-bottom:1rem;">⚠️ Unauthorized Inspection</h1>
@@ -45,7 +45,7 @@
                         <p style="font-size:1rem; color:#64748b; margin-top:2rem;">Please close your Developer Tools and refresh the page to continue.</p>
                     </div>
                 </div>
-            \`;
+            `;
             
             // Attempt to stop further document parsing/loading
             if (window.stop) {
