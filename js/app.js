@@ -118,6 +118,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const customBadgeHtml = customClass 
           ? `<span class="custom-class-badge" title="Custom Classification ${customClass}">${customClass}</span>` 
           : '';
+        const itemStatus = localStorage.getItem(`git-academy-status-${lesson.id}`) || 'yet';
+        const statusBadgeHtml = itemStatus === 'done' 
+          ? `<span class="custom-status-badge" title="Completed Study">✓</span>` 
+          : '';
         
         const item = document.createElement("div");
         item.className = `lesson-item ${isSelected ? 'active' : ''}`;
@@ -126,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="lesson-item-title">${lesson.title}</span>
             <div style="display: flex; gap: 0.35rem; align-items: center;">
               ${customBadgeHtml}
+              ${statusBadgeHtml}
               <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
             </div>
           </div>
@@ -155,6 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function performFilter() {
     const query = searchInput.value.toLowerCase().trim();
     const difficultyFilter = filterSelect.value;
+    const statusSelect = document.getElementById("status-filter-select");
+    const statusFilter = statusSelect ? statusSelect.value : "all";
     
     const filtered = allLessonsData.filter(lesson => {
       const matchesSearch = 
@@ -166,7 +173,12 @@ document.addEventListener("DOMContentLoaded", () => {
         difficultyFilter === "all" || 
         lesson.difficulty === difficultyFilter;
         
-      return matchesSearch && matchesDifficulty;
+      const itemStatus = localStorage.getItem(`git-academy-status-${lesson.id}`) || 'yet';
+      const matchesStatus = 
+        statusFilter === "all" || 
+        itemStatus === statusFilter;
+        
+      return matchesSearch && matchesDifficulty && matchesStatus;
     });
     
     renderLessonsList(filtered);
@@ -178,6 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const sortSelect = document.getElementById("sort-select");
   if (sortSelect) {
     sortSelect.addEventListener("change", performFilter);
+  }
+  
+  const statusFilterSelect = document.getElementById("status-filter-select");
+  if (statusFilterSelect) {
+    statusFilterSelect.addEventListener("change", performFilter);
   }
 
   // --- Select and Render Lesson Details ---
@@ -194,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const difficultyClass = `badge-${lesson.difficulty}`;
     const fileId = `GIT-REC-${lesson.id.toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
     const customClass = localStorage.getItem(`git-academy-class-${lesson.id}`) || '';
+    const itemStatus = localStorage.getItem(`git-academy-status-${lesson.id}`) || 'yet';
 
     cardViewport.innerHTML = `
       <div class="clinical-id-card">
@@ -230,6 +248,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="class-btn ${customClass === 'D' ? 'active' : ''}" data-class="D">D</button>
                 <button class="class-btn ${!customClass ? 'active' : ''}" data-class="" title="Clear Classification">×</button>
               </div>
+            </div>
+
+            <div class="sidebar-panel">
+              <span class="sidebar-label">Study Status</span>
+              <button class="status-btn ${itemStatus === 'done' ? 'done' : 'yet'}" id="status-toggle-btn">
+                ${itemStatus === 'done' ? '✅ Completed (Done)' : '📖 Yet to Study'}
+              </button>
             </div>
 
             <div class="sidebar-panel">
@@ -395,6 +420,23 @@ document.addEventListener("DOMContentLoaded", () => {
         performFilter();
       });
     });
+
+    // Hook up study status button click
+    const statusToggleBtn = cardViewport.querySelector("#status-toggle-btn");
+    if (statusToggleBtn) {
+      statusToggleBtn.addEventListener("click", () => {
+        const currentStatus = localStorage.getItem(`git-academy-status-${lesson.id}`) || 'yet';
+        const newStatus = currentStatus === 'done' ? 'yet' : 'done';
+        localStorage.setItem(`git-academy-status-${lesson.id}`, newStatus);
+
+        // Update button visual class and text
+        statusToggleBtn.className = `status-btn ${newStatus}`;
+        statusToggleBtn.innerHTML = newStatus === 'done' ? '✅ Completed (Done)' : '📖 Yet to Study';
+
+        // Refresh lessons list to update badge and filter
+        performFilter();
+      });
+    }
 
     // --- DevTools Detection & Conditional Lock ---
     // Remove previous unconditional lock timer if any

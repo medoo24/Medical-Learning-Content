@@ -656,6 +656,59 @@ h1 {
   text-transform: uppercase;
 }
 
+/* Done/Yet Study Status Toggle Styles */
+.status-btn {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.status-btn.yet {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.status-btn.yet:hover {
+  background-color: var(--bg-app);
+  border-color: var(--primary);
+}
+
+.status-btn.done {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.status-btn.done:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.custom-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #10b981;
+  color: white;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.75rem;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
 /* Premium Content Lock (Tease) */
 .content-locked {
   filter: blur(5px);
