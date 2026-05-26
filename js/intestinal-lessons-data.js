@@ -1,4 +1,4 @@
-const intestinalLessonsData = [ 
+const intestinalLessonsData = [
   // ============================================================
   // LESSON 1: CHRONIC DIARRHEA
   // ============================================================
