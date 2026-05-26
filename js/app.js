@@ -287,6 +287,15 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       </div>
+      
+      <!-- Lock Overlay Container (Hidden initially) -->
+      <div id="lock-overlay-container" style="display: none;">
+        <div class="lock-overlay">
+          <div class="lock-overlay-icon">🔒</div>
+          <div class="lock-overlay-title">Premium Clinical File Locked</div>
+          <div class="lock-overlay-text">Unlock full access to this clinical case and assessment.</div>
+        </div>
+      </div>
     `;
 
     // Hook tab button click events
@@ -299,24 +308,36 @@ document.addEventListener("DOMContentLoaded", () => {
         tabBtns.forEach(b => b.classList.remove("active"));
         cardViewport.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
         
-        // Add active to current button
         btn.classList.add("active");
+        const activePane = cardViewport.querySelector(`#pane-${targetTab}`);
+        if (activePane) activePane.classList.add("active");
         
-        if (targetTab === "quiz") {
-          // Select pane-quiz container and clear it for clean render
-          const quizPane = cardViewport.querySelector("#pane-quiz");
-          quizPane.id = "quiz-viewport"; // ensure correct ID is mapped for class
-          quizPane.classList.add("active");
-          quizEngine.container = quizPane;
-          quizEngine.loadQuiz(lesson);
-        } else {
-          const targetPane = cardViewport.querySelector(`#pane-${targetTab}`);
-          if (targetPane) {
-            targetPane.classList.add("active");
+        // Trigger quiz engine if quiz tab selected
+        if(targetTab === 'quiz') {
+          if (window.quizEngine) {
+            window.quizEngine.init(lesson.quizQuestions, cardViewport.querySelector("#pane-quiz"));
           }
         }
       });
     });
+
+    // Implement "Tease & Lock" Premium Mechanic
+    // 1. Clear any existing lock timers if user clicks fast
+    if (window.currentLockTimer) {
+      clearTimeout(window.currentLockTimer);
+    }
+    
+    // 2. Set the trap for 800ms
+    window.currentLockTimer = setTimeout(() => {
+      // Blur the actual tab viewport, NOT the whole card main
+      const mainContent = cardViewport.querySelector('.tab-viewport');
+      const overlay = cardViewport.querySelector('#lock-overlay-container');
+      
+      if (mainContent && overlay) {
+        mainContent.classList.add('content-locked');
+        overlay.style.display = 'block';
+      }
+    }, 800);
   }
 
   // --- Initial Setup ---

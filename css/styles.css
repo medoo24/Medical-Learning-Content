@@ -598,6 +598,54 @@ h1 {
   list-style: none;
 }
 
+/* Premium Content Lock (Tease) */
+.content-locked {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.8s ease-in-out;
+}
+
+.lock-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 2rem 3rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: center;
+  z-index: 100;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  pointer-events: auto; /* Allow clicking inside the overlay if needed */
+}
+
+.lock-overlay-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.lock-overlay-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--primary-dark);
+  margin-bottom: 0.5rem;
+}
+
+.lock-overlay-text {
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
 .quick-facts-list li {
   position: relative;
   padding-left: 1rem;
