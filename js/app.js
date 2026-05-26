@@ -5,12 +5,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const quizEngine = new window.ClinicalQuiz("quiz-viewport");
 
   // DOM Elements
-  const accordionWrapper = document.getElementById("git-accordion");
-  const accordionHeader = document.getElementById("accordion-header");
-  const lessonsGrid = document.getElementById("lessons-grid");
+  const accordions = document.querySelectorAll(".category-accordion");
+  const gitLessonsGrid = document.getElementById("git-lessons-grid");
+  const intestinalLessonsGrid = document.getElementById("intestinal-lessons-grid");
+  const gitCountBadge = document.getElementById("git-count-badge");
+  const intestinalCountBadge = document.getElementById("intestinal-count-badge");
   const searchInput = document.getElementById("search-input");
   const filterSelect = document.getElementById("filter-select");
   const cardViewport = document.getElementById("card-viewport");
+  
+  // Combine all lessons data
+  const allLessonsData = [...(typeof lessonsData !== 'undefined' ? lessonsData : []), ...(typeof intestinalLessonsData !== 'undefined' ? intestinalLessonsData : [])];
   
   // Theme Buttons
   const themeBtns = document.querySelectorAll(".theme-btn");
@@ -43,49 +48,67 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Accordion Controls ---
-  accordionHeader.addEventListener("click", () => {
-    accordionWrapper.classList.toggle("expanded");
+  accordions.forEach(acc => {
+    const header = acc.querySelector(".accordion-header");
+    header.addEventListener("click", () => {
+      acc.classList.toggle("expanded");
+    });
   });
 
   // --- Render Lessons List ---
   function renderLessonsList(lessonsToRender) {
-    lessonsGrid.innerHTML = "";
+    gitLessonsGrid.innerHTML = "";
+    intestinalLessonsGrid.innerHTML = "";
     
-    if (lessonsToRender.length === 0) {
-      lessonsGrid.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);">
-          No matching disorders or lessons found.
-        </div>
-      `;
-      return;
+    // Determine which category a lesson belongs to (we can check a property or hardcode by ID prefixes if needed, 
+    // but the cleanest way is to check if it exists in the original lessonsData array)
+    const upperGitLessons = lessonsToRender.filter(l => lessonsData.find(u => u.id === l.id));
+    const intestinalLessons = lessonsToRender.filter(l => intestinalLessonsData.find(i => i.id === l.id));
+
+    // Update Badges
+    gitCountBadge.textContent = `${upperGitLessons.length} Lessons`;
+    intestinalCountBadge.textContent = `${intestinalLessons.length} Lessons`;
+
+    function populateGrid(gridElement, lessonsArray) {
+      if (lessonsArray.length === 0) {
+        gridElement.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);">
+            No matching disorders found in this category.
+          </div>
+        `;
+        return;
+      }
+
+      lessonsArray.forEach(lesson => {
+        const isSelected = activeLesson && activeLesson.id === lesson.id;
+        const difficultyClass = `badge-${lesson.difficulty}`;
+        
+        const item = document.createElement("div");
+        item.className = `lesson-item ${isSelected ? 'active' : ''}`;
+        item.innerHTML = `
+          <div class="lesson-item-header">
+            <span class="lesson-item-title">${lesson.title}</span>
+            <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
+          </div>
+          <div class="lesson-item-meta">
+            <span>${lesson.organ}</span>
+            <span>⏱️ ${lesson.readTime}</span>
+          </div>
+        `;
+        
+        item.addEventListener("click", () => {
+          selectLesson(lesson);
+          // Highlight active list item across all grids
+          document.querySelectorAll(".lesson-item").forEach(el => el.classList.remove("active"));
+          item.classList.add("active");
+        });
+        
+        gridElement.appendChild(item);
+      });
     }
 
-    lessonsToRender.forEach(lesson => {
-      const isSelected = activeLesson && activeLesson.id === lesson.id;
-      const difficultyClass = `badge-${lesson.difficulty}`;
-      
-      const item = document.createElement("div");
-      item.className = `lesson-item ${isSelected ? 'active' : ''}`;
-      item.innerHTML = `
-        <div class="lesson-item-header">
-          <span class="lesson-item-title">${lesson.title}</span>
-          <span class="lesson-item-badge ${difficultyClass}">${lesson.difficulty}</span>
-        </div>
-        <div class="lesson-item-meta">
-          <span>${lesson.organ}</span>
-          <span>⏱️ ${lesson.readTime}</span>
-        </div>
-      `;
-      
-      item.addEventListener("click", () => {
-        selectLesson(lesson);
-        // Highlight active list item
-        document.querySelectorAll(".lesson-item").forEach(el => el.classList.remove("active"));
-        item.classList.add("active");
-      });
-      
-      lessonsGrid.appendChild(item);
-    });
+    populateGrid(gitLessonsGrid, upperGitLessons);
+    populateGrid(intestinalLessonsGrid, intestinalLessons);
   }
 
   // --- Filter and Search Logic ---
@@ -93,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const query = searchInput.value.toLowerCase().trim();
     const difficultyFilter = filterSelect.value;
     
-    const filtered = lessonsData.filter(lesson => {
+    const filtered = allLessonsData.filter(lesson => {
       const matchesSearch = 
         lesson.title.toLowerCase().includes(query) || 
         lesson.definition.toLowerCase().includes(query) ||
@@ -276,10 +299,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Initial Setup ---
-  renderLessonsList(lessonsData);
+  renderLessonsList(allLessonsData);
   
   // Select first lesson by default
-  if (lessonsData.length > 0) {
-    selectLesson(lessonsData[0]);
+  if (allLessonsData.length > 0) {
+    selectLesson(allLessonsData[0]);
   }
 });
